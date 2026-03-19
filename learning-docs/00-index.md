@@ -6,12 +6,12 @@
 
 | 阶段 | 主题 | 状态 |
 |------|------|------|
-| 阶段一 | [全局认知](01-overview/) | 进行中 |
-| 阶段二 | [Master](02-master/) / [MetaNode](03-metanode/) / [DataNode](04-datanode/) | 待开始 |
-| 阶段三 | [SDK](05-sdk/) / [FUSE Client](06-client/) | 待开始 |
-| 阶段四 | [BlobStore](07-blobstore/) / [ObjectNode](08-objectnode/) / [辅助服务](09-auxiliary/) | 待开始 |
-| 阶段五 | [基础设施](10-infrastructure/) | 待开始 |
-| 阶段六 | [端到端流程](11-e2e-flows/) | 待开始 |
+| 阶段一 | [全局认知](01-overview/) | 完成 |
+| 阶段二 | [Master](02-master/) / [MetaNode](03-metanode/) / [DataNode](04-datanode/) | 完成 |
+| 阶段三 | [SDK](05-sdk/) / [FUSE Client](06-client/) | 完成 |
+| 阶段四 | [BlobStore](07-blobstore/) / [ObjectNode](08-objectnode/) / [辅助服务](09-auxiliary/) | 完成 |
+| 阶段五 | [基础设施](10-infrastructure/) | 完成 |
+| 阶段六 | [端到端流程](11-e2e-flows/) | 完成 |
 
 ## 目录结构
 
