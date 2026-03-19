@@ -35,10 +35,10 @@ Inode 在 B-Tree 中按 `Inode ID` 排序（`Less()` 方法比较 Inode 字段�
 
 ### Extent Key
 
-每个文件的数据由一组 Extent Key 描述：
+每个文件的数据由一组 Extent Key 描述，定义在 **`proto/extent_key.go`**（非 obj_extent_key.go）：
 
 ```go
-// proto/obj_extent_key.go
+// proto/extent_key.go
 type ExtentKey struct {
     FileOffset   uint64  // 文件内偏移
     PartitionId  uint64  // DataPartition ID
@@ -46,6 +46,7 @@ type ExtentKey struct {
     ExtentOffset uint64  // Extent 内偏移
     Size         uint32  // 数据大小
     CRC          uint32  // CRC 校验
+    SnapInfo     *ExtSnapInfo  // 快照相关（多版本/快照代码会用到）
 }
 ```
 

@@ -25,12 +25,18 @@ type Packet struct {
     Arg                []byte  // 附加参数（如创建/追加操作的地址信息）
     Data               []byte  // 数据载荷
     StartT             int64   // 请求开始时间戳
+    // mesg string 为未导出字段，用于日志等，此处略
     HasPrepare         bool    // 是否已 prepare
     VerSeq             uint64  // 版本序列号（多版本快照）
+    ProtoVersion       uint32  // 协议版本（见下表）
+    VerList            []*VolVersionInfo  // 多版本列表
+    noPrefix           bool    // 内部用，日志格式控制
 }
 ```
 
 ### 协议版本
+
+**说明**：版本以 `proto/packet.go` 中常量注释为准。代码中 Packet 结构体上方注释写 “version-0: before v3.4; version-1: from v3.4”，与常量注释不一致，以常量为准。
 
 | 版本 | 值 | 说明 |
 |------|---|------|
@@ -51,7 +57,7 @@ type Packet struct {
 
 ### 1. DataNode 操作 (0x01 - 0x1F)
 
-客户端 / MetaNode 与 DataNode 之间的数据操作：
+客户端 / MetaNode 与 DataNode 之间的数据操作（下表为主要操作，副本与修复相关会用到 0x0A、0x10、0x11、0x16–0x18 等）：
 
 | OpCode | 值 | 说明 |
 |--------|---|------|
@@ -64,11 +70,17 @@ type Packet struct {
 | `OpGetAllWatermarks` | 0x07 | 获取所有水位标记 |
 | `OpNotifyReplicasToRepair` | 0x08 | 通知副本修复 |
 | `OpExtentRepairRead` | 0x09 | 修复读 |
+| `OpBroadcastMinAppliedID` | 0x0A | 广播最小已应用 ID |
 | `OpRandomWrite` | 0x0F | 随机写 |
+| `OpGetAppliedId` | 0x10 | 获取已应用 ID |
+| `OpGetPartitionSize` | 0x11 | 获取分区大小 |
 | `OpSyncRandomWrite` | 0x12 | 同步随机写 |
 | `OpSyncWrite` | 0x13 | 同步写 |
 | `OpReadTinyDeleteRecord` | 0x14 | 读取 Tiny 删除记录 |
 | `OpTinyExtentRepairRead` | 0x15 | Tiny Extent 修复读 |
+| `OpGetMaxExtentIDAndPartitionSize` | 0x16 | 获取最大 ExtentID 与分区大小 |
+| `OpSnapshotExtentRepairRead` | 0x17 | 快照 Extent 修复读 |
+| `OpSnapshotExtentRepairRsp` | 0x18 | 快照 Extent 修复响应 |
 
 ### 2. MetaNode 操作 (0x20 - 0x3F)
 
@@ -109,6 +121,11 @@ type Packet struct {
 | `OpDecommissionMetaPartition` | 0x45 | 下线元数据分区 |
 | `OpAddMetaPartitionRaftMember` | 0x46 | 添加 Raft 成员 |
 | `OpRemoveMetaPartitionRaftMember` | 0x47 | 移除 Raft 成员 |
+| `OpMetaPartitionTryToLeader` | 0x48 | MP 尝试成为 Leader |
+| `OpFreezeEmptyMetaPartition` | 0x49 | 冻结空 MP |
+| `OpBackupEmptyMetaPartition` | 0x4A | 备份空 MP |
+| `OpRemoveBackupMetaPartition` | 0x4B | 移除备份 MP |
+| `OpIsRaftStatusOk` | 0x4C | 检查 Raft 状态 |
 
 ### 4. Master -> DataNode 管理操作 (0x60 - 0x8F)
 
@@ -122,6 +139,11 @@ type Packet struct {
 | `OpAddDataPartitionRaftMember` | 0x67 | 添加 Raft 成员 |
 | `OpRemoveDataPartitionRaftMember` | 0x68 | 移除 Raft 成员 |
 | `OpRecoverBadDisk` | 0x6E | 坏盘恢复 |
+| `OpQueryBadDiskRecoverProgress` | 0x6F | 查询坏盘恢复进度 |
+| `OpDeleteBackupDirectories` | 0x80 | 删除备份目录 |
+| `OpDeleteLostDisk` | 0x8A | 删除丢失盘 |
+| `OpReloadDisk` | 0x8B | 重载磁盘 |
+| `OpSetRepairingStatus` | 0x8C | 设置修复状态 |
 
 ### 5. 分布式事务操作 (0xA0 - 0xAD)
 

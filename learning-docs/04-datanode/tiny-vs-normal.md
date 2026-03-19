@@ -2,7 +2,7 @@
 
 ## 两种 Extent 类型
 
-CubeFS 针对大文件和小文件采用不同的存储策略：
+CubeFS 针对大文件和小文件采用不同的存储策略。**说明**：实现以 `proto/` 与 `datanode/storage/` 中的常量 `TinyExtentStartID`、`TinyExtentCount` 为准（1~64）；`extent_store.go` 中有一处历史注释写 “5000000…5000128”，已过时，请以常量为准。
 
 | 特性 | Tiny Extent | Normal Extent |
 |------|-------------|---------------|

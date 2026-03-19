@@ -7,15 +7,18 @@ Master 使用单个 Raft Group（GroupID=1）管理所有集群元数据。多�
 ## MetadataFsm 结构体
 
 ```go
+// master/metadata_fsm.go，store 类型来自 raftstore_db 包
 type MetadataFsm struct {
-    store               *RocksDBStore     // RocksDB 存储
+    store               *raftstore.RocksDBStore  // RocksDB 存储（包名：raftstore/raftstore_db）
     rs                  *raft.RaftServer
-    applied             uint64            // 最近已应用的日志索引
-    retainLogs          uint64            // 保留的 Raft 日志数量
+    applied             uint64
+    retainLogs          uint64
     leaderChangeHandler raftLeaderChangeHandler
     peerChangeHandler   raftPeerChangeHandler
     snapshotHandler     raftApplySnapshotHandler
     UserAppCmdHandler   raftUserCmdApplyHandler
+    onSnapshot          bool    // 是否正在应用快照
+    raftLk              sync.Mutex
 }
 ```
 
@@ -178,15 +181,14 @@ Apply(cmd, index)  // 各节点应用
 
 ## 持久化 Key 命名规则
 
-RocksDB 中存储的 Key 遵循以下命名模式：
+RocksDB 中存储的 Key 遵循 `master/const.go` 中的定义：`keySeparator = "#"`，格式为 `#前缀#id#...`（前缀与 id 之间用 `#` 分隔）。与 `metadata_fsm_op.go` 中 build 函数一致：
 
-| 前缀 | 示例 | 存储内容 |
-|------|------|---------|
-| `#mn` | `#mn_192.168.0.1:17210` | MetaNode |
-| `#dn` | `#dn_192.168.0.1:17310` | DataNode |
-| `#vol` | `#vol_myvolume` | Volume |
-| `#mp` | `#mp_1234` | MetaPartition |
-| `#dp` | `#dp_5678` | DataPartition |
-| `#ns` | `#ns_1` | NodeSet |
-| `#usr` | `#usr_admin` | 用户信息 |
-| `#cluster` | `#cluster` | 集群配置 |
+| 前缀 | 实际格式 | 示例 | 存储内容 |
+|------|----------|------|---------|
+| `#mn#` | `#mn#id#addr` | `#mn#1#192.168.0.1:17210` | MetaNode |
+| `#dn#` | `#dn#id#addr` | `#dn#2#192.168.0.1:17310` | DataNode |
+| `#vol#` | `#vol#volID` | `#vol#100` | Volume（volID 为数字） |
+| `#mp#` | `#mp#volID#metaPartitionID` | `#mp#100#1` | MetaPartition |
+| `#dp#` | `#dp#volID#partitionID` | `#dp#100#200` | DataPartition |
+| `#user#` | `#user#userid` | `#user#admin` | 用户信息（前缀为 user，非 usr） |
+| `#c#` | `#c#name` | `#c#clusterName` | 集群配置（前缀为 c，非 cluster） |
