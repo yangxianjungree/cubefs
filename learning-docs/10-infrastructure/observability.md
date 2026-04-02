@@ -123,3 +123,7 @@ type Audit struct {
 ## Consul 注册
 
 支持将服务注册到 Consul，用于服务发现和 Prometheus 的服务端抓取。
+
+## 关联文档
+
+集群实战排障请结合 `10-infrastructure/debugging-runbook.md` 一起使用。

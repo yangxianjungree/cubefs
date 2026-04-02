@@ -67,6 +67,7 @@ learning-docs/
 │   ├── raft.md
 │   ├── communication.md
 │   ├── observability.md
+│   ├── debugging-runbook.md     # 调试与故障排查手册
 │   └── utilities.md
 └── 11-e2e-flows/                  # 端到端流程
     ├── write-flow.md
